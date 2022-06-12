@@ -194,6 +194,18 @@ h3{font-size: var(--fs-h3)}
     margin: 0 auto;
 }
 
+.dustin-resume{
+    width: auto;
+    height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    border:solid;
+    border-width: .5em;
+    border-color: var(--clr-dark);
+}
+
+
 
 
 /* PROJECTS PORTFOLIO THING */
@@ -413,6 +425,9 @@ header{
     font-family: var(--ff-secondary);
     margin-bottom: 1em; 
 }
+
+
+
 
 
 
