@@ -242,6 +242,22 @@ h3{font-size: var(--fs-h3)}
 }
 
 
+/* Classes */
+
+.classes{
+    background-color: var(--clr-bg);
+    text-align: center;
+}   
+
+.class__list{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.class__name{
+    border: solid;
+}
+
 /* Footer */
 .footer{
     background: #111;
