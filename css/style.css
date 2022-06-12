@@ -268,7 +268,7 @@ h3{font-size: var(--fs-h3)}
 /* NaviGATION and/OR HEADER --- whatever you want to call this */
 
 .logo{
-    max-width: 300px;
+    max-width: 100px;
 }
 
 header{
@@ -389,6 +389,20 @@ header{
     max-width: 900px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.section__subtitle--proj{
+    align-self: start;
+    grid-column: -1/1;
+    grid-row: 2;
+    text-align: left;
+    position: relative;
+    left: -1.5em;
+    width:calc(100% + 1.5em);
+    background: var(--clr-accent);
+    padding: .25em 1em;
+    font-family: var(--ff-secondary);
+    margin-bottom: 1em; 
 }
 
 /* SLIDESHOW IN FINGERPRINT PROJECTS */
