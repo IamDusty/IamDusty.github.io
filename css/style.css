@@ -187,6 +187,15 @@ h3{font-size: var(--fs-h3)}
 
 }
 
+/* Resume */
+
+.resume{
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+
+
 /* PROJECTS PORTFOLIO THING */
 
 .projects{
@@ -404,6 +413,29 @@ header{
     font-family: var(--ff-secondary);
     margin-bottom: 1em; 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* SLIDESHOW IN FINGERPRINT PROJECTS */
 /* Slideshow container */
