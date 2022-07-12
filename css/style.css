@@ -90,7 +90,8 @@ h3{font-size: var(--fs-h3)}
 }
 
 .section__subtitle--intro,
-.section__subtitle--about{
+.section__subtitle--about,
+.section__subtitle--classes{
     background: var(--clr-accent);
     padding: .25em 1em;
     font-family: var(--ff-secondary);
@@ -249,14 +250,37 @@ h3{font-size: var(--fs-h3)}
     text-align: center;
 }   
 
-.class__list{
-    display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
+.class{
+    background-color: var(--clr-accent);
+    background-image: linear-gradient(to bottom right, #BFDBF7, #303030);
+    font:var(--ff-primary) ;
+    color: white;
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    padding: 1em;
+    height: 4rem;
 }
 
-.class__name{
-    border: solid;
+.cards{
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-gap: 1em;
 }
+
+@media (min-width: 600px){
+    .cards{
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+
+@media (min-width: 900px){
+    .cards{
+        grid-template-columns: repeat(3,1fr);
+    }
+}
+
 
 /* Footer */
 .footer{
