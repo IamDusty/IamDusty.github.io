@@ -467,9 +467,23 @@ header{
 }
 
 
+/*Research Paper*/
 
+.paper{
+    max-width: 1000px;
+    margin: 0 auto;
+}
 
-
+.dustin-paper{
+    width: auto;
+    height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    border:solid;
+    border-width: .5em;
+    border-color: var(--clr-dark);
+}
 
 
 
