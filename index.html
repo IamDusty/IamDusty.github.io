@@ -945,10 +945,19 @@
         function loadRestaurants() {
             displayRestaurants(restaurants);
             updateMapMarkers(restaurants);
+            
+            // Add this to fit all markers on the map
+            if (markers.length > 0) {
+                const bounds = new google.maps.LatLngBounds();
+                markers.forEach(marker => {
+                    bounds.extend(marker.getPosition());
+                });
+                map.fitBounds(bounds);
+            }
         }
         
         // Responsive behavior
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', () => {                          
             if (window.innerWidth >= 992) {
                 sidebarEl.classList.remove('open');
                 toggleSidebarBtn.querySelector('i').classList.add('fa-chevron-left');
@@ -959,5 +968,5 @@
     
     <!-- Add Google Maps API with a placeholder for the API key -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBwebWyigYuJPw0i2zrKiibKNCPR3XqVb0&callback=initMap" async defer></script>
-</body>
+</body>                 
 </html>
