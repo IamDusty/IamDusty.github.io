@@ -729,39 +729,49 @@
 
         // Function to search for restaurants using Places API
         function searchRestaurants() {
-            restaurants = []; // Clear existing restaurants
-
-            const request = {
-                location: userLocation,
-                radius: 5000, // Search within 5km
-                type: 'restaurant'
-            };
-
-            // Apply search term if available
-            const searchTerm = searchInputEl.value.trim();
-            if (searchTerm) {
-                request.keyword = searchTerm;
-            }
-
-            // Apply cuisine filters dynamically
-            if (activeFilters.cuisine && activeFilters.cuisine.length > 0) {
-                request.keyword = activeFilters.cuisine.join(' '); // Apply all selected cuisines
-            }
-
+            restaurants = [];
             clearMarkers();
+            
+            const cuisineFilters = activeFilters.cuisine.length > 0 ? activeFilters.cuisine : ['restaurant'];  
 
-            placesService.nearbySearch(request, (results, status, pagination) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    processPlacesResults(results);
-                    if (pagination && pagination.hasNextPage) {
-                        pagination.nextPage();
+            let pendingRequests = cuisineFilters.length;
+
+            cuisineFilters.forEach((cuisine) => {
+                const request = {
+                    location: userLocation,
+                    radius: 5000,
+                    type: 'restaurant',
+                    keyword: cuisine
+                };
+
+                placesService.nearbySearch(request, (results, status, pagination) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        results.forEach((place) => {
+                            placesService.getDetails({ placeId: place.place_id }, (placeDetails, status) => {
+                                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                                    const restaurant = convertPlaceToRestaurant(placeDetails);
+                                    restaurants.push(restaurant);
+                                }
+                            });
+                        });
+
+                        if (pagination && pagination.hasNextPage) {
+                            pagination.nextPage();
+                        }
+                    } else {
+                        console.error("Places API request failed with status:", status);
                     }
-                } else {
-                    console.error("Places API request failed with status:", status);
-                    resultsListEl.innerHTML = '<div class="no-results">No results found. Try adjusting your filters.</div>';
-                }
+
+                    // When all requests are complete, filter results
+                    pendingRequests--;
+                    if (pendingRequests === 0) {
+                        filterRestaurants();
+                    }
+                });
             });
         }
+
+
 
 
         // Process results from Places API
@@ -783,24 +793,34 @@
 
         // Convert Google Places data to our restaurant format
         function convertPlaceToRestaurant(place) {
-            // Try to determine cuisine type from types or categories
-            let cuisine = "other";
             const cuisineMap = {
                 'restaurant': 'other',
                 'food': 'other',
-                'italian_restaurant': 'italian',
-                'japanese_restaurant': 'japanese',
-                'mexican_restaurant': 'mexican',
-                'chinese_restaurant': 'chinese',
-                'indian_restaurant': 'indian',
-                'thai_restaurant': 'thai',
-                'american_restaurant': 'american',
-                'mediterranean_restaurant': 'mediterranean',
+                'point_of_interest': 'other',
+                'establishment': 'other',
+                'italian': 'italian',
+                'japanese': 'japanese',
+                'mexican': 'mexican',
+                'chinese': 'chinese',
+                'indian': 'indian',
+                'thai': 'thai',
+                'american': 'american',
+                'mediterranean': 'mediterranean',
                 'cafe': 'cafe',
-                'fast_food_restaurant': 'fast-food'
+                'barbecue': 'barbecue',
+                'pizza': 'pizza',
+                'seafood': 'seafood',
+                'vegan': 'vegan',
+                'vegetarian': 'vegetarian',
+                'steakhouse': 'steakhouse',
+                'french': 'french',
+                'greek': 'greek',
+                'korean': 'korean',
             };
-            
-            // Try to determine cuisine from place types
+
+            let cuisine = "other";
+
+            // Use broader types for better filtering compatibility
             if (place.types) {
                 for (const type of place.types) {
                     if (cuisineMap[type]) {
@@ -809,64 +829,26 @@
                     }
                 }
             }
-            
-            // Try to determine dining experience
-            let experience = "casual"; // Default
-            if (place.price_level === 1 && place.types && place.types.includes('fast_food_restaurant')) {
-                experience = "fast-food";
-            } else if (place.price_level === 4) {
-                experience = "fine-dining";
-            } else if (place.types && place.types.includes('cafe')) {
-                experience = "cafe";
-            } else if (place.types && place.types.includes('food_truck')) {
-                experience = "food-truck";
-            }
-            
-            // Map price level to our format
-            let price = "$";
-            if (place.price_level === 2) {
-                price = "$$";
-            } else if (place.price_level >= 3) {
-                price = "$$$";
-            }
-            
-            // Try to determine dietary options (this is approximate based on types)
-            const dietary = [];
-            if (place.types) {
-                if (place.types.includes('vegetarian_restaurant')) dietary.push('vegetarian');
-                if (place.types.includes('vegan_restaurant')) dietary.push('vegan');
-                if (place.types.includes('halal_restaurant')) dietary.push('halal');
-                if (place.types.includes('gluten_free_restaurant')) dietary.push('gluten-free');
-            }
-            
-            // Calculate distance from user location
-            let distance = "Unknown";
-            if (userLocation && place.geometry && place.geometry.location) {
-                const placeLatLng = place.geometry.location;
-                const userLatLng = new google.maps.LatLng(userLocation.lat, userLocation.lng);
-                const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(userLatLng, placeLatLng);
-                const distanceInMiles = (distanceInMeters / 1609.34).toFixed(1);
-                distance = `${distanceInMiles} miles`;
-            }
-            
+
             return {
                 id: place.place_id,
                 name: place.name,
                 cuisine: cuisine,
-                experience: experience,
-                price: price,
-                dietary: dietary,
+                experience: place.types.includes('fast_food') ? 'fast-food' : 'casual',
+                price: place.price_level === 1 ? '$' : place.price_level === 2 ? '$$' : '$$$',
+                dietary: [],
                 rating: place.rating || 0,
                 address: place.vicinity || place.formatted_address || "",
-                distance: distance,
+                distance: "Unknown",
                 image: place.photos && place.photos.length > 0 
                     ? place.photos[0].getUrl({ maxWidth: 350, maxHeight: 140 }) 
                     : "/api/placeholder/350/140",
                 lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng(),
-                place: place // Keep the original place data for reference
+                lng: place.geometry.location.lng()
             };
         }
+
+
 
         // Clear all markers from the map
         function clearMarkers() {
@@ -959,7 +941,7 @@
                 }
                 
                 updateActiveFiltersDisplay();
-                filterRestaurants();
+                searchRestaurants();
             });
         });
         
@@ -1021,14 +1003,12 @@
             const searchTerm = searchInputEl.value.toLowerCase();
 
             const filteredRestaurants = restaurants.filter(restaurant => {
-                // Check if the restaurant matches the selected cuisine filters
-                if (activeFilters.cuisine && activeFilters.cuisine.length > 0) {
-                    if (!activeFilters.cuisine.includes(restaurant.cuisine)) {
-                        return false;
-                    }
+                // Check cuisine filters
+                if (activeFilters.cuisine.length > 0 && !activeFilters.cuisine.includes(restaurant.cuisine)) {
+                    return false;
                 }
 
-                // Check if it matches the search input
+                // Check search term
                 if (searchTerm && !restaurant.name.toLowerCase().includes(searchTerm)) {
                     return false;
                 }
@@ -1039,6 +1019,7 @@
             displayRestaurants(filteredRestaurants);
             updateMapMarkers(filteredRestaurants);
         }
+
 
         
         // Display restaurants in the sidebar
@@ -1104,69 +1085,64 @@
             // Clear existing markers
             markers.forEach(marker => marker.setMap(null));
             markers = [];
-            
+
             // Add new markers
             filteredRestaurants.forEach(restaurant => {
-                const marker = new google.maps.marker.AdvancedMarkerElement({
+                const marker = new google.maps.Marker({
                     position: new google.maps.LatLng(restaurant.lat, restaurant.lng),
                     map: map,
                     title: restaurant.name,
-                    restaurantId: restaurant.id,
-                    animation: google.maps.Animation.DROP,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 10,
-                        fillColor: "#ff6b6b",
-                        fillOpacity: 0.9,
-                        strokeColor: "#FFFFFF",
-                        strokeWeight: 2
-                    }
+                    animation: google.maps.Animation.DROP
                 });
-                
+
                 // Create info window
                 const infoContent = `
                     <div class="info-window">
                         <h3>${restaurant.name}</h3>
-                        <div class="info-window-details">
-                            <div><i class="fas fa-map-marker-alt"></i> ${restaurant.address}</div>
-                            <div><i class="fas fa-utensils"></i> ${restaurant.cuisine}</div>
-                            <div><i class="fas fa-dollar-sign"></i> ${restaurant.price}</div>
-                            <div>
-                                <i class="fas fa-star"></i>
-                                <strong>${restaurant.rating}</strong>
-                            </div>
-                        </div>
+                        <p>${restaurant.address}</p>
+                        <p>Rating: ${restaurant.rating}</p>
+                        <p>Price: ${restaurant.price}</p>
                     </div>
                 `;
-                
+
                 const infowindow = new google.maps.InfoWindow({
                     content: infoContent
                 });
-                
+
                 // Add click event to marker
                 marker.addListener('click', () => {
-                    // Close any open info windows
-                    markers.forEach(m => m.infowindow?.close());
-                    
-                    // Open this info window
                     infowindow.open(map, marker);
-                    marker.infowindow = infowindow;
-                    
-                    // Highlight corresponding card in sidebar
-                    document.querySelectorAll('.restaurant-card').forEach(card => {
-                        card.classList.remove('active');
-                    });
-                    const card = document.querySelector(`.restaurant-card[data-id="${restaurant.id}"]`);
-                    if (card) {
-                        card.classList.add('active');
-                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
                 });
-                
-                marker.infowindow = infowindow;
+
                 markers.push(marker);
+                bounds.extend(marker.getPosition());
             });
+
+            // Adjust map bounds to fit all markers
+            if (filteredRestaurants.length > 0) {
+                map.fitBounds(bounds);
+            }
         }
+
+        // Add this function to resize the map after sidebar toggle
+        function resizeMap() {
+            google.maps.event.trigger(map, 'resize');
+            if (userLocation) {
+                map.setCenter(userLocation);
+            }
+        }
+
+        // Call this after toggling the sidebar
+        toggleSidebarBtn.addEventListener('click', () => {
+            setTimeout(resizeMap, 300);
+        });
+
+        // Responsive behavior
+        window.addEventListener('resize', () => {
+            if (window.innerWidth < 992) {
+                sidebarEl.classList.remove('open');
+            }
+        });
         
         // Load all restaurants initially
         function loadRestaurants() {
@@ -1241,7 +1217,7 @@
     
     <!-- Add Google Maps API with a placeholder for the API key -->
     <script 
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBwebWyigYuJPw0i2zrKiibKNCPR3XqVb0&libraries=places,geometry,marker&callback=initMap" 
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2sOv3oiR4vUH9URVDK-uFLFxNsAswq-U&libraries=places,geometry,marker&callback=initMap" 
         loading="async" 
         async 
         defer>
