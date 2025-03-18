@@ -802,8 +802,12 @@
                     if (type === 'price' && !activeFilters.price.includes(restaurant.price)) {
                         return false;
                     }
-                    if (type === 'dietary' && activeFilters.dietary.some(diet => !restaurant.dietary.includes(diet))) {
-                        return false;
+                    // In the filterRestaurants function, change the dietary check to:
+                    if (type === 'dietary') {
+                        // Check if any of the selected dietary options exist in restaurant's dietary options
+                        if (!activeFilters.dietary.some(diet => restaurant.dietary.includes(diet))) {
+                            return false;
+                        }
                     }
                 }
                 
