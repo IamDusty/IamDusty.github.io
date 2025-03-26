@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
 # Get Google API key from environment variables
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+GOOGLE_API_KEY = os.environ.get("AIzaSyC8JPP23jn4xJ5FM1xbOc1Q_f7h2cKq7tE", "")
 
 @app.route('/')
 def index():
