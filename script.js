@@ -95,14 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     title.setAttribute('data-title', title.textContent);
     
     // Randomly apply glitch effect to title
-    setInterval(() => {
-        if (Math.random() > 0.7) {
-            title.classList.add('glitch');
-            setTimeout(() => {
-                title.classList.remove('glitch');
-            }, 150);
-        }
-    }, 3000);
+    /* Removed title glitch effect */
     
     // Add CSS for ripple effect
     const style = document.createElement('style');
